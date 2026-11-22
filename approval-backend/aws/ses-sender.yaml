@@ -1,0 +1,18 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: SES sender identity for Nkabom approval notifications.
+
+Parameters:
+  ApprovalFromEmail:
+    Type: String
+    Default: solopappy76@gmail.com
+    Description: Address SES will send approval notifications from; verify it after creating the stack.
+
+Resources:
+  NkabomApprovalSenderIdentity:
+    Type: AWS::SES::EmailIdentity
+    Properties:
+      EmailIdentity: !Ref ApprovalFromEmail
+
+Outputs:
+  ApprovalFromEmail:
+    Value: !Ref ApprovalFromEmail

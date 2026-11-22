@@ -1,0 +1,12 @@
+com\infobip\nkabom\approval\service\TurnstileVerificationService$TurnstileResponse.class
+com\infobip\nkabom\approval\api\PublicConfigurationController$PublicConfiguration.class
+com\infobip\nkabom\approval\api\ApprovalRequest.class
+com\infobip\nkabom\approval\config\ApiCorsConfiguration.class
+com\infobip\nkabom\approval\service\TurnstileVerificationService.class
+com\infobip\nkabom\approval\api\ApprovalController.class
+com\infobip\nkabom\approval\api\PublicConfigurationController.class
+com\infobip\nkabom\approval\service\ApprovalEmailService.class
+com\infobip\nkabom\approval\service\SesConfiguration.class
+com\infobip\nkabom\approval\ApprovalBackendApplication.class
+com\infobip\nkabom\approval\service\ApprovalRateLimiter.class
+com\infobip\nkabom\approval\service\ApprovalRateLimiter$RequestWindow.class

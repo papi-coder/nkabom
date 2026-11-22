@@ -1,0 +1,3 @@
+com\infobip\nkabom\approval\service\ApprovalRateLimiterTest.class
+com\infobip\nkabom\approval\service\TurnstileVerificationServiceTest.class
+com\infobip\nkabom\approval\service\ApprovalEmailServiceTest.class

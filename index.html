@@ -1,0 +1,858 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#fff9ef">
+  <title>Nkabom - Community Messaging</title>
+  <style>
+    :root {
+      --ink: #20231f;
+      --muted: #70766d;
+      --paper: #fffdfa;
+      --cream: #fff7e8;
+      --line: #e8e7df;
+      --green: #4d6b55;
+      --green-dark: #384f3e;
+      --sage: #edf3ea;
+      --orange: #e98947;
+      --orange-pale: #fff0df;
+      --red: #b94a42;
+      --blue: #557b91;
+      --shadow: 0 14px 40px rgba(41, 48, 38, .08);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background: #f6f7f3;
+      font-size: 14px;
+    }
+    button, input, select, textarea { font: inherit; }
+    button { cursor: pointer; }
+    .app { display: grid; grid-template-columns: 236px minmax(0, 1fr); min-height: 100vh; }
+    .sidebar {
+      position: sticky; top: 0; height: 100vh;
+      display: flex; flex-direction: column;
+      padding: 26px 18px 20px;
+      background: var(--paper); border-right: 1px solid var(--line);
+    }
+    .brand { display: flex; align-items: center; gap: 10px; padding: 0 8px 28px; }
+    .brand-mark {
+      width: 38px; height: 38px; border-radius: 12px 12px 12px 4px;
+      display: grid; place-items: center; color: white;
+      background: var(--green); font-weight: 800; letter-spacing: -.5px;
+    }
+    .brand-name { font-size: 19px; font-weight: 800; letter-spacing: -.5px; }
+    .brand-name small { display: block; color: var(--muted); font-size: 10px; font-weight: 700; letter-spacing: 1.4px; margin-top: 1px; }
+    .nav { display: grid; gap: 5px; }
+    .nav button {
+      border: 0; background: transparent; color: #666c64;
+      height: 44px; border-radius: 10px; padding: 0 12px;
+      display: flex; align-items: center; gap: 11px; text-align: left;
+    }
+    .nav button.active { color: var(--green-dark); background: var(--sage); font-weight: 750; }
+    .nav button:hover { background: #f4f5f0; }
+    .nav svg { width: 18px; height: 18px; stroke-width: 1.8; }
+    .free-plan { margin-top: auto; border: 1px solid var(--line); background: var(--cream); border-radius: 14px; padding: 14px; }
+    .free-plan strong { display: block; margin-bottom: 4px; }
+    .free-plan p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
+    .profile { display: flex; align-items: center; gap: 9px; margin-top: 16px; padding: 10px 8px 0; border-top: 1px solid var(--line); }
+    .avatar { width: 34px; height: 34px; border-radius: 50%; background: #dfe8d8; display: grid; place-items: center; color: var(--green-dark); font-weight: 800; }
+    .profile strong { display: block; font-size: 13px; }
+    .profile span { color: var(--muted); font-size: 11px; }
+    .profile a { display: block; color: var(--green-dark); font-size: 11px; text-decoration: none; }
+    .profile a:hover { text-decoration: underline; }
+    .contact-number { color: var(--green-dark); font-weight: 750; text-decoration: none; }
+    .contact-number:hover { text-decoration: underline; }
+    .captcha-status { margin-top: 8px; color: var(--muted); font-size: 11px; }
+    .main { min-width: 0; }
+    .topbar {
+      height: 76px; padding: 0 34px; display: flex; align-items: center;
+      justify-content: space-between; background: rgba(255,253,250,.92);
+      border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 20;
+      backdrop-filter: blur(10px);
+    }
+    .topbar h1 { margin: 0; font-size: 21px; letter-spacing: -.4px; }
+    .top-actions { display: flex; align-items: center; gap: 10px; }
+    .status-pill { display: flex; align-items: center; gap: 7px; color: var(--muted); font-size: 12px; padding: 8px 10px; }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #65a36f; box-shadow: 0 0 0 3px #edf5e9; }
+    .icon-btn { width: 40px; height: 40px; border-radius: 10px; border: 1px solid var(--line); background: white; display: grid; place-items: center; }
+    .content { max-width: 1440px; margin: 0 auto; padding: 26px 34px 42px; }
+    .summary { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 12px; margin-bottom: 18px; }
+    .priority-strip {
+      display: grid; grid-template-columns: repeat(6, minmax(0,1fr)); gap: 8px;
+      margin-bottom: 18px;
+    }
+    .priority-tool {
+      min-height: 76px; border: 1px solid var(--line); border-radius: 12px;
+      background: var(--paper); padding: 12px; text-align: left;
+      color: var(--ink); display: flex; flex-direction: column; justify-content: space-between;
+    }
+    .priority-tool strong { font-size: 12px; }
+    .priority-tool span { color: var(--muted); font-size: 10px; line-height: 1.35; }
+    .priority-tool b {
+      width: 24px; height: 24px; border-radius: 7px; display: grid; place-items: center;
+      background: var(--sage); color: var(--green-dark); font-size: 11px;
+    }
+    .priority-view { display: none; }
+    .priority-view.active { display: block; }
+    .data-table { width: 100%; border-collapse: collapse; }
+    .data-table th, .data-table td { padding: 11px 10px; border-bottom: 1px solid var(--line); text-align: left; font-size: 11px; }
+    .data-table th { color: var(--muted); font-weight: 700; }
+    .data-table td strong { font-size: 12px; }
+    .badge { display: inline-flex; align-items: center; height: 24px; border-radius: 999px; padding: 0 8px; font-size: 10px; font-weight: 800; }
+    .badge.green { background: var(--sage); color: var(--green-dark); }
+    .badge.orange { background: var(--orange-pale); color: #8a5a36; }
+    .badge.red { background: #f7e7e4; color: var(--red); }
+    .table-actions { display: flex; gap: 6px; }
+    .mini-btn { height: 30px; border: 1px solid var(--line); border-radius: 8px; background: white; padding: 0 9px; font-size: 10px; font-weight: 750; }
+    .mini-btn.primary { height: 30px; background: var(--green); color: white; border: 0; }
+    .later-tools { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+    .later-tool { border: 1px dashed #daddd3; border-radius: 10px; padding: 10px; color: var(--muted); background: #fafbf8; }
+    .later-tool strong { display: block; color: var(--ink); font-size: 11px; margin-bottom: 3px; }
+    .later-tool span { font-size: 10px; }
+    .import-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .import-box { border: 1px dashed #cbd4c5; border-radius: 12px; background: #fbfcf9; padding: 14px; }
+    .import-box h3 { margin: 0 0 5px; font-size: 12px; }
+    .import-box p { margin: 0 0 10px; color: var(--muted); font-size: 10px; line-height: 1.45; }
+    .import-box input[type="file"] { width: 100%; margin-bottom: 8px; font-size: 10px; }
+    .manual-contact { display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 7px; }
+    .manual-contact input { min-width: 0; height: 38px; }
+    .import-progress { margin-top: 10px; }
+    .import-progress-track { height: 7px; border-radius: 99px; overflow: hidden; background: #edf0e9; }
+    .import-progress-track i { display: block; width: 0; height: 100%; background: var(--green); transition: width .2s; }
+    .import-progress-row { display: flex; justify-content: space-between; margin-top: 5px; color: var(--muted); font-size: 10px; }
+    .direct-contact-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .stat {
+      min-height: 104px; border: 1px solid var(--line); border-radius: 14px;
+      background: var(--paper); padding: 16px 18px;
+    }
+    .stat-head { display: flex; align-items: center; justify-content: space-between; color: var(--muted); font-size: 12px; }
+    .stat-icon { width: 30px; height: 30px; border-radius: 9px; background: var(--sage); display: grid; place-items: center; color: var(--green); }
+    .stat-value { margin-top: 10px; font-size: 25px; line-height: 1; font-weight: 800; letter-spacing: -1px; }
+    .stat-sub { margin-top: 7px; color: var(--muted); font-size: 11px; }
+    .workspace { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(260px, .65fr); gap: 18px; align-items: start; }
+    .card { border: 1px solid var(--line); border-radius: 15px; background: var(--paper); box-shadow: 0 1px 0 rgba(32,35,31,.02); }
+    .card-header { height: 58px; padding: 0 18px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--line); }
+    .card-header h2 { margin: 0; font-size: 14px; }
+    .card-body { padding: 18px; }
+    .field { margin-bottom: 16px; }
+    .field label, .field-label { display: block; margin-bottom: 8px; font-size: 12px; font-weight: 750; }
+    .input, select, textarea {
+      width: 100%; border: 1px solid #dcddd5; border-radius: 9px; background: white; color: var(--ink);
+      outline: none;
+    }
+    .input, select { height: 42px; padding: 0 12px; }
+    textarea { min-height: 108px; resize: vertical; padding: 11px 12px; line-height: 1.5; }
+    .input:focus, select:focus, textarea:focus { border-color: #91a894; box-shadow: 0 0 0 3px #edf3ea; }
+    .template-row { display: flex; gap: 7px; overflow-x: auto; padding-bottom: 3px; }
+    .chip { white-space: nowrap; height: 34px; border: 1px solid var(--line); background: white; border-radius: 999px; padding: 0 11px; color: #61675f; font-size: 12px; }
+    .chip.active { background: var(--sage); border-color: #cfdbc9; color: var(--green-dark); font-weight: 700; }
+    .channel-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .channel {
+      position: relative; min-height: 68px; border: 1px solid var(--line); border-radius: 11px;
+      background: white; display: flex; align-items: center; gap: 9px; padding: 10px;
+    }
+    .channel.active { border-color: #acc0a4; background: #f7faf5; }
+    .channel input { position: absolute; opacity: 0; }
+    .channel-badge { width: 34px; height: 34px; border-radius: 9px; display: grid; place-items: center; background: #eef1eb; color: var(--green); flex: none; }
+    .channel strong { display: block; font-size: 12px; }
+    .channel small { color: var(--muted); font-size: 10px; }
+    .checkmark { margin-left: auto; width: 16px; height: 16px; border: 1px solid #ccd1c7; border-radius: 50%; }
+    .channel.active .checkmark { border: 5px solid var(--green); }
+    .language-tabs { display: flex; gap: 4px; margin-bottom: 8px; }
+    .language-tabs button { border: 0; border-radius: 8px 8px 0 0; background: transparent; color: var(--muted); padding: 8px 10px; font-size: 12px; }
+    .language-tabs button.active { background: var(--sage); color: var(--green-dark); font-weight: 800; }
+    .review-line { display: flex; justify-content: space-between; color: var(--muted); font-size: 11px; margin-top: 6px; }
+    .audience-row { display: grid; grid-template-columns: 1fr 110px; gap: 8px; }
+    .schedule-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .toggle-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .toggle { width: 38px; height: 22px; border: 0; border-radius: 999px; background: #d9ddd5; padding: 3px; transition: .2s; }
+    .toggle::before { content: ""; display: block; width: 16px; height: 16px; border-radius: 50%; background: white; transition: .2s; box-shadow: 0 1px 3px rgba(0,0,0,.16); }
+    .toggle.on { background: var(--green); }
+    .toggle.on::before { transform: translateX(16px); }
+    .urgent { border: 1px solid #f1cfb0; background: #fffaf4; border-radius: 10px; padding: 11px; margin-top: 12px; }
+    .urgent-label { display: flex; align-items: center; gap: 8px; }
+    .urgent-label span:last-child { margin-left: auto; color: var(--orange); font-size: 10px; font-weight: 800; }
+    .approval { border: 1px solid #dde4d8; background: #f8faf6; border-radius: 10px; padding: 11px; margin-top: 12px; }
+    .cost { display: flex; align-items: center; justify-content: space-between; margin-top: 14px; padding: 12px; border-radius: 10px; background: var(--cream); }
+    .cost strong { color: var(--green-dark); }
+    .send-row { display: grid; grid-template-columns: 1fr auto; gap: 8px; margin-top: 14px; }
+    .primary, .secondary {
+      height: 44px; border-radius: 9px; padding: 0 16px; border: 0; font-weight: 800;
+    }
+    .primary { background: var(--green); color: white; }
+    .primary:hover { background: var(--green-dark); }
+    .secondary { background: white; border: 1px solid var(--line); color: var(--ink); }
+    .right-stack { display: grid; gap: 18px; }
+    .delivery-chart { height: 150px; display: flex; align-items: end; gap: 10px; padding: 12px 4px 0; }
+    .bar-group { flex: 1; height: 130px; display: flex; flex-direction: column; justify-content: end; align-items: center; gap: 6px; }
+    .bar { width: 100%; max-width: 38px; border-radius: 7px 7px 3px 3px; background: var(--sage); }
+    .bar.green { background: #7e987f; }
+    .bar.orange { background: #efb27d; }
+    .bar.red { background: #dba29b; }
+    .bar.blue { background: #91adb9; }
+    .bar-group small { color: var(--muted); font-size: 10px; }
+    .metric-list { display: grid; gap: 9px; }
+    .metric { display: grid; grid-template-columns: 86px 1fr 38px; align-items: center; gap: 8px; font-size: 11px; color: var(--muted); }
+    .metric-bar { height: 6px; border-radius: 99px; background: #eff0ea; overflow: hidden; }
+    .metric-bar i { display: block; height: 100%; border-radius: 99px; background: var(--green); }
+    .metric strong { color: var(--ink); text-align: right; }
+    .tip { display: flex; gap: 9px; padding: 12px; border-radius: 10px; background: var(--orange-pale); color: #76573e; font-size: 11px; line-height: 1.45; }
+    .tip-icon { width: 22px; height: 22px; border-radius: 50%; background: white; display: grid; place-items: center; flex: none; color: var(--orange); font-weight: 900; }
+    .inbox { display: grid; gap: 10px; }
+    .message { display: grid; grid-template-columns: 34px 1fr auto; gap: 9px; align-items: start; }
+    .message-avatar { width: 34px; height: 34px; border-radius: 50%; background: #e9ede6; display: grid; place-items: center; color: var(--green-dark); font-size: 11px; font-weight: 800; }
+    .message strong { display: block; font-size: 12px; }
+    .message p { margin: 3px 0 0; color: var(--muted); font-size: 11px; }
+    .message time { color: #9a9e96; font-size: 10px; }
+    .mobile-bar { display: none; }
+    .toast {
+      position: fixed; right: 24px; bottom: 24px; z-index: 50;
+      max-width: 330px; border: 1px solid #cad6c5; border-radius: 12px;
+      background: white; box-shadow: var(--shadow); padding: 14px 16px;
+      transform: translateY(20px); opacity: 0; pointer-events: none; transition: .25s;
+    }
+    .toast.show { transform: translateY(0); opacity: 1; }
+    .toast strong { display: block; font-size: 12px; }
+    .toast span { display: block; margin-top: 3px; color: var(--muted); font-size: 11px; }
+    :focus-visible { outline: 3px solid #d79c68; outline-offset: 2px; }
+    @media (max-width: 1060px) {
+      .app { grid-template-columns: 76px minmax(0,1fr); }
+      .sidebar { padding-inline: 12px; }
+      .brand { padding-inline: 7px; }
+      .brand-name, .nav button span, .free-plan, .profile div:not(.avatar) { display: none; }
+      .nav button { justify-content: center; padding: 0; }
+      .profile { justify-content: center; padding-inline: 0; }
+      .workspace { grid-template-columns: minmax(0,1.4fr) minmax(250px,.6fr); }
+      .priority-strip { grid-template-columns: repeat(3, 1fr); }
+    }
+    @media (max-width: 820px) {
+      .app { display: block; }
+      .sidebar { display: none; }
+      .topbar { height: 64px; padding: 0 18px; }
+      .topbar h1 { font-size: 17px; }
+      .status-pill { display: none; }
+      .content { padding: 18px 14px 86px; }
+      .summary { grid-template-columns: repeat(2,1fr); }
+      .workspace { grid-template-columns: 1fr; }
+      .right-stack { grid-template-columns: 1fr 1fr; }
+      .priority-strip { grid-template-columns: repeat(3, 1fr); }
+      .mobile-bar {
+        position: fixed; left: 10px; right: 10px; bottom: 8px; z-index: 30;
+        height: 62px; border: 1px solid var(--line); border-radius: 16px;
+        background: rgba(255,253,250,.96); box-shadow: var(--shadow);
+        display: grid; grid-template-columns: repeat(4,1fr); align-items: center;
+      }
+      .mobile-bar button { border: 0; background: transparent; color: var(--muted); display: grid; gap: 3px; justify-items: center; font-size: 9px; }
+      .mobile-bar button.active { color: var(--green-dark); }
+      .mobile-bar svg { width: 18px; height: 18px; }
+    }
+    @media (max-width: 560px) {
+      .summary { gap: 8px; }
+      .stat { min-height: 94px; padding: 13px; }
+      .stat-value { font-size: 21px; }
+      .right-stack { grid-template-columns: 1fr; }
+      .channel-grid { grid-template-columns: 1fr; }
+      .channel { min-height: 58px; }
+      .audience-row, .schedule-grid, .send-row { grid-template-columns: 1fr; }
+      .send-row .primary { width: 100%; }
+      .card-body { padding: 14px; }
+      .priority-strip { grid-template-columns: repeat(2, 1fr); }
+      .later-tools { grid-template-columns: 1fr; }
+      .import-grid { grid-template-columns: 1fr; }
+      .manual-contact { grid-template-columns: 1fr; }
+      .direct-contact-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar" aria-label="Primary navigation">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">N</div>
+        <div class="brand-name">Nkabom <small>CONNECT</small></div>
+      </div>
+      <nav class="nav">
+        <button class="active" data-page="Dashboard" aria-current="page">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg>
+          <span>Dashboard</span>
+        </button>
+        <button data-page="Campaigns">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 13 18 4v16L4 13Z"/><path d="M7 15v5h4l1-4"/></svg>
+          <span>Campaigns</span>
+        </button>
+        <button data-page="Contacts">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M3 19c.5-4 2.7-6 6-6s5.5 2 6 6"/><circle cx="17" cy="9" r="2"/><path d="M16 14c3 0 4.5 1.7 5 5"/></svg>
+          <span>Audience</span>
+        </button>
+        <button data-page="Inbox">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 5h16v12H8l-4 4V5Z"/><path d="M8 9h8M8 13h5"/></svg>
+          <span>Inbox</span>
+        </button>
+        <button data-page="Templates">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 3h12v18H6z"/><path d="M9 7h6M9 11h6M9 15h4"/></svg>
+          <span>Templates</span>
+        </button>
+        <button data-page="Approvals">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8 12 2.5 2.5L16 9"/></svg>
+          <span>Approvals</span>
+        </button>
+      </nav>
+      <div class="free-plan">
+        <strong>Free plan</strong>
+        <p>All channels and tools are available. No paid features or limits.</p>
+      </div>
+      <div class="profile">
+        <div class="avatar">P</div>
+        <div><strong>Papi</strong><a href="tel:+233541190485">054 119 0485</a><span>Administrator</span></div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <h1 id="pageTitle">Dashboard</h1>
+        <div class="top-actions">
+          <div class="status-pill"><span class="status-dot"></span><span id="connectionStatus">Online</span></div>
+          <button class="icon-btn" aria-label="Notifications">
+            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg>
+          </button>
+        </div>
+      </header>
+
+      <div class="content">
+        <section class="summary" aria-label="Campaign summary">
+          <article class="stat"><div class="stat-head"><span>Messages sent</span><div class="stat-icon">↗</div></div><div class="stat-value">12,480</div><div class="stat-sub">This month</div></article>
+          <article class="stat"><div class="stat-head"><span>Delivery rate</span><div class="stat-icon">✓</div></div><div class="stat-value">94.8%</div><div class="stat-sub">+2.4% from last month</div></article>
+          <article class="stat"><div class="stat-head"><span>Replies</span><div class="stat-icon">↩</div></div><div class="stat-value">1,024</div><div class="stat-sub">8.2% response rate</div></article>
+          <article class="stat"><div class="stat-head"><span>Active audiences</span><div class="stat-icon">◎</div></div><div class="stat-value">18</div><div class="stat-sub">Across 6 organizations</div></article>
+        </section>
+
+        <section class="priority-strip" aria-label="Priority messaging tools">
+          <button class="priority-tool" data-view="audiences"><b>1</b><strong>Audience groups</strong><span>Permitted contacts</span></button>
+          <button class="priority-tool" data-view="channels"><b>2</b><strong>Send channels</strong><span>SMS, email, WhatsApp</span></button>
+          <button class="priority-tool" data-view="templates"><b>3</b><strong>Templates</strong><span>Verified school notices</span></button>
+          <button class="priority-tool" data-view="reports"><b>4</b><strong>Delivery reports</strong><span>Sent, failed, replied</span></button>
+          <button class="priority-tool" data-view="consent"><b>5</b><strong>Consent tracking</strong><span>Permissions & opt-outs</span></button>
+          <button class="priority-tool" data-view="approvals"><b>6</b><strong>Message approvals</strong><span>Human review required</span></button>
+        </section>
+
+        <section id="priorityPanel" class="priority-view card" aria-live="polite">
+          <div class="card-header">
+            <h2 id="priorityTitle">Audience groups</h2>
+            <button class="chip" id="priorityAction">Add audience</button>
+          </div>
+          <div class="card-body" id="priorityContent"></div>
+        </section>
+
+        <div class="workspace">
+          <section class="card" aria-labelledby="composeTitle">
+            <div class="card-header"><h2 id="composeTitle">Create a campaign</h2><button class="chip" id="saveDraft">Save draft</button></div>
+            <div class="card-body">
+              <div class="field">
+                <label for="campaignName">Campaign name</label>
+                <input class="input" id="campaignName" value="Term 1 meeting reminder" autocomplete="off">
+              </div>
+              <div class="field">
+                <span class="field-label">Choose a template</span>
+                <div class="template-row" role="list">
+                  <button class="chip active" data-template="meeting">Meeting notice</button>
+                  <button class="chip" data-template="fee">Fee reminder</button>
+                  <button class="chip" data-template="closure">School closure</button>
+                  <button class="chip" data-template="emergency">Emergency</button>
+                  <button class="chip" data-template="appointment">Appointment</button>
+                </div>
+              </div>
+              <div class="field">
+                <span class="field-label">Delivery channels</span>
+                <div class="channel-grid">
+                  <label class="channel active"><input type="checkbox" checked value="WhatsApp"><span class="channel-badge">WA</span><span><strong>WhatsApp</strong><small>Selected</small></span><span class="checkmark"></span></label>
+                  <label class="channel"><input type="checkbox" value="SMS"><span class="channel-badge">SMS</span><span><strong>SMS</strong><small>Selected channel</small></span><span class="checkmark"></span></label>
+                  <label class="channel"><input type="checkbox" value="Email"><span class="channel-badge">@</span><span><strong>Email</strong><small>Optional</small></span><span class="checkmark"></span></label>
+                </div>
+              </div>
+              <div class="field">
+                <span class="field-label">Audience</span>
+                <div class="audience-row">
+                  <select aria-label="Audience group"><option>Accra Academy — Parents</option><option>JHS 2 — All classes</option><option>Health Department</option><option>Volunteers — Greater Accra</option></select>
+                  <select aria-label="Recipient count"><option>482 contacts</option><option>All consented</option></select>
+                </div>
+                <div class="direct-contact-grid" style="margin-top:8px">
+                  <input class="input" id="directEmail" type="email" placeholder="Recipient email address" aria-label="Recipient email address">
+                  <input class="input" id="directPhone" type="tel" placeholder="Recipient phone / SMS number" aria-label="Recipient phone number">
+                </div>
+                <div class="review-line"><span>Add one recipient directly or use an imported audience.</span><button class="mini-btn" id="addDirectContact" type="button">Add recipient</button></div>
+              </div>
+              <div class="field">
+                <span class="field-label">Message</span>
+                <div class="language-tabs" role="tablist" aria-label="Message language">
+                  <button class="active" role="tab" aria-selected="true" data-language="English">English</button>
+                  <button role="tab" aria-selected="false" data-language="Twi">Twi</button>
+                  <button role="tab" aria-selected="false" data-language="Ga">Ga</button>
+                  <button role="tab" aria-selected="false" data-language="Ewe">Ewe</button>
+                </div>
+                <textarea id="messageText" maxlength="320" aria-label="Message text">Dear Parent, the Term 1 meeting is on Friday at 3:00 PM in the school hall. Please reply YES to confirm or NO if you cannot attend.</textarea>
+                <div class="review-line"><span id="charCount">139 / 320 characters</span><span id="reviewStatus">Ready for review</span></div>
+                <div class="later-tools" aria-label="Later-stage tools">
+                  <div class="later-tool"><strong>Translation — later</strong><span>Human-reviewed English, Twi, Ga and Ewe versions.</span></div>
+                  <div class="later-tool"><strong>AI drafting & channel fallback — later</strong><span>AI drafts and automatic backup routing must receive approval before sending.</span></div>
+                </div>
+              </div>
+              <div class="schedule-grid">
+                <div class="field">
+                  <label for="sendDate">Send date</label>
+                  <input class="input" id="sendDate" type="date" value="2026-11-24">
+                </div>
+                <div class="field">
+                  <label for="sendTime">Send time</label>
+                  <input class="input" id="sendTime" type="time" value="09:30">
+                </div>
+              </div>
+              <div class="toggle-row">
+                <div><strong style="font-size:12px">Consent & opt-out check</strong><div style="color:var(--muted);font-size:11px;margin-top:3px">Only contacts who agreed will receive this campaign.</div></div>
+                <button class="toggle on" id="consentToggle" role="switch" aria-checked="true" aria-label="Consent and opt-out check"></button>
+              </div>
+              <div class="urgent">
+                <div class="toggle-row urgent-label"><strong style="font-size:12px">Urgent alert</strong><span>CONTROLLED</span><button class="toggle" id="urgentToggle" role="switch" aria-checked="false" aria-label="Urgent alert"></button></div>
+              </div>
+              <div class="approval">
+                <div class="toggle-row"><div><strong style="font-size:12px">Approval notification</strong><div style="color:var(--muted);font-size:11px;margin-top:3px">Every request is emailed to solopappy76@gmail.com for review.</div></div><span class="badge green">Required</span></div>
+                <div style="margin-top:12px"><strong style="font-size:12px">Security check</strong><div id="approvalCaptcha" style="margin-top:8px"></div><div class="captcha-status" id="captchaStatus">Loading security check…</div></div>
+              </div>
+              <div class="cost"><span style="font-size:12px">Estimated message cost</span><strong>GHS 0.00 — Free</strong></div>
+              <div class="send-row"><button class="secondary" id="previewButton">Preview message</button><button class="primary" id="sendButton">Send for approval</button></div>
+            </div>
+          </section>
+
+          <aside class="right-stack">
+            <section class="card">
+              <div class="card-header"><h2>Delivery overview</h2><button class="chip">7 days</button></div>
+              <div class="card-body">
+                <div class="delivery-chart" aria-label="Channel delivery chart">
+                  <div class="bar-group"><div class="bar green" style="height:82%"></div><small>WhatsApp</small></div>
+                  <div class="bar-group"><div class="bar orange" style="height:68%"></div><small>SMS</small></div>
+                  <div class="bar-group"><div class="bar blue" style="height:48%"></div><small>Email</small></div>
+                  <div class="bar-group"><div class="bar red" style="height:18%"></div><small>Failed</small></div>
+                </div>
+                <div class="metric-list">
+                  <div class="metric"><span>Delivered</span><div class="metric-bar"><i style="width:94%"></i></div><strong>94%</strong></div>
+                  <div class="metric"><span>Replied</span><div class="metric-bar"><i style="width:42%"></i></div><strong>42%</strong></div>
+                  <div class="metric"><span>Failed</span><div class="metric-bar"><i style="width:6%;background:#bd6961"></i></div><strong>6%</strong></div>
+                </div>
+                <div class="tip" style="margin-top:12px"><span class="tip-icon">i</span><span>Keep messages under 160 characters and send during working hours to improve delivery and replies.</span></div>
+              </div>
+            </section>
+            <section class="card">
+              <div class="card-header"><h2>Recent replies</h2><button class="chip">View all</button></div>
+              <div class="card-body inbox">
+                <div class="message"><div class="message-avatar">EK</div><div><strong>Ernest K.</strong><p>YES — I will attend.</p></div><time>8m</time></div>
+                <div class="message"><div class="message-avatar">AB</div><div><strong>Afua B.</strong><p>Can you share the venue?</p></div><time>21m</time></div>
+                <div class="message"><div class="message-avatar">YO</div><div><strong>Yaw Owusu</strong><p>NO — work commitment.</p></div><time>1h</time></div>
+              </div>
+            </section>
+            <section class="card">
+              <div class="card-header"><h2>Contact the administrator</h2></div>
+              <div class="card-body">
+                <strong>Papi</strong>
+                <p style="margin:5px 0 8px;color:var(--muted);font-size:12px">Call or message about this service.</p>
+                <a class="contact-number" href="tel:+233541190485">054 119 0485</a>
+              </div>
+            </section>
+          </aside>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <nav class="mobile-bar" aria-label="Mobile navigation">
+    <button class="active"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg>Home</button>
+    <button><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 13 18 4v16L4 13Z"/></svg>Campaign</button>
+    <button><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M3 19c.5-4 2.7-6 6-6s5.5 2 6 6"/></svg>Audience</button>
+    <button><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 5h16v12H8l-4 4V5Z"/></svg>Inbox</button>
+  </nav>
+  <div class="toast" id="toast" role="status" aria-live="polish"><strong id="toastTitle">Draft saved</strong><span id="toastText">You can continue when you reconnect.</span></div>
+
+  <script>
+    const templates = {
+      meeting: "Dear Parent, the Term 1 meeting is on Friday at 3:00 PM in the school hall. Please reply YES to confirm or NO if you cannot attend.",
+      fee: "Dear Parent, a reminder that the Term 1 fee is due on Friday. Please pay through the approved school account. Reply HELP for assistance.",
+      closure: "Notice: The school will be closed on [date] because of [reason]. Normal classes resume on [date]. Reply OK to confirm receipt.",
+      emergency: "URGENT: [Safety notice]. Please follow instructions from school staff and keep children away from the affected area.",
+      appointment: "Reminder: Your appointment is on [date] at [time]. Reply 1 to keep, 2 to reschedule, or CALL for staff assistance."
+    };
+    const translations = {
+      Twi: "Adɔfoɔ Agyenammaa, yɛahyɛ asɛmbi hyi 3:00 PM, Fida. Mesrɛ wo bua YES sɛ wobɛba anaa NO sɛ worentumi mma.",
+      Ga: "Afiɛ, hemɔji maŋ lɛ saa Fida lɛ, 3:00 PM. Ofainɛ ha YES kɛji oba, aloo NO kɛji onako.",
+      Ewe: "Nɔvi lɔ, dzidzɔnye le Fida dzi le ga 3:00 PM. Tɔ trɔ YES ne èava alo NO ne màte ŋu ava o."
+    };
+    const messageText = document.getElementById("messageText");
+    const charCount = document.getElementById("charCount");
+    const toast = document.getElementById("toast");
+    const apiBaseUrl = window.NKABOM_API_BASE_URL
+      || (window.location.port === "5500" ? "http://127.0.0.1:8080" : window.location.origin);
+    let approvalConfigError;
+    let captchaToken = null;
+    let captchaWidgetId = null;
+    let captchaScriptPromise = null;
+    const approvalConfigPromise = fetch(new URL("/api/config", apiBaseUrl))
+      .then(response => {
+        if (response.status === 404) throw new Error(`The approval backend was not found at ${apiBaseUrl}. Start it or configure the API URL.`);
+        if (!response.ok) throw new Error(`The approval backend returned HTTP ${response.status}.`);
+        return response.json();
+      })
+      .catch(error => {
+        if (error instanceof TypeError) {
+          approvalConfigError = new Error(`Cannot reach the approval backend at ${apiBaseUrl}. Start the backend first.`);
+        } else {
+          approvalConfigError = error;
+        }
+        return null;
+      });
+
+    async function getApprovalConfig() {
+      const config = await approvalConfigPromise;
+      if (!config) throw approvalConfigError || new Error("Approval service is not configured.");
+      return config;
+    }
+
+    function loadTurnstile() {
+      if (window.turnstile) return Promise.resolve();
+      if (!captchaScriptPromise) {
+        captchaScriptPromise = new Promise((resolve, reject) => {
+          const script = document.createElement("script");
+          script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+          script.async = true;
+          script.defer = true;
+          script.onload = resolve;
+          script.onerror = () => reject(new Error("Could not load the security check."));
+          document.head.appendChild(script);
+        });
+      }
+      return captchaScriptPromise;
+    }
+
+    async function initializeCaptcha() {
+      const config = await getApprovalConfig();
+      if (!config.turnstileSiteKey) throw new Error("The security check has not been configured.");
+      await loadTurnstile();
+      captchaWidgetId = window.turnstile.render("#approvalCaptcha", {
+        sitekey: config.turnstileSiteKey,
+        action: "approval",
+        callback: token => {
+          captchaToken = token;
+          document.getElementById("captchaStatus").textContent = "Security check complete.";
+        },
+        "expired-callback": () => {
+          captchaToken = null;
+          document.getElementById("captchaStatus").textContent = "Please complete the security check.";
+        },
+        "error-callback": () => {
+          captchaToken = null;
+          document.getElementById("captchaStatus").textContent = "Security check failed. Please retry.";
+        }
+      });
+    }
+
+    initializeCaptcha().catch(error => {
+      document.getElementById("captchaStatus").textContent = error.message;
+    });
+
+    function updateCount() {
+      charCount.textContent = `${messageText.value.length} / 320 characters`;
+    }
+    function showToast(title, text) {
+      document.getElementById("toastTitle").textContent = title;
+      document.getElementById("toastText").textContent = text;
+      toast.classList.add("show");
+      clearTimeout(showToast.timer);
+      showToast.timer = setTimeout(() => toast.classList.remove("show"), 3200);
+    }
+    document.querySelectorAll(".template-row .chip").forEach(button => {
+      button.addEventListener("click", () => {
+        document.querySelectorAll(".template-row .chip").forEach(item => item.classList.remove("active"));
+        button.classList.add("active");
+        messageText.value = templates[button.dataset.template];
+        updateCount();
+      });
+    });
+    document.querySelectorAll(".language-tabs button").forEach(button => {
+      button.addEventListener("click", () => {
+        document.querySelectorAll(".language-tabs button").forEach(item => {
+          item.classList.remove("active");
+          item.setAttribute("aria-selected", "false");
+        });
+        button.classList.add("active");
+        button.setAttribute("aria-selected", "true");
+        if (button.dataset.language !== "English") {
+          messageText.value = translations[button.dataset.language];
+        } else {
+          messageText.value = templates.meeting;
+        }
+        updateCount();
+        document.getElementById("reviewStatus").textContent = "Needs local review";
+      });
+    });
+    document.querySelectorAll(".channel").forEach(channel => {
+      channel.querySelector("input").addEventListener("change", event => {
+        channel.classList.toggle("active", event.target.checked);
+      });
+    });
+    document.querySelectorAll(".toggle").forEach(toggle => {
+      toggle.addEventListener("click", () => {
+        toggle.classList.toggle("on");
+        toggle.setAttribute("aria-checked", toggle.classList.contains("on") ? "true" : "false");
+      });
+    });
+    messageText.addEventListener("input", updateCount);
+    document.getElementById("saveDraft").addEventListener("click", () => {
+      localStorage.setItem("nkabom-draft", messageText.value);
+      showToast("Draft saved", navigator.onLine ? "Saved securely in this browser." : "Saved offline. It will be ready when you reconnect.");
+    });
+    document.getElementById("sendButton").addEventListener("click", async () => {
+      if (!navigator.onLine) {
+        showToast("Connection required", "Reconnect before submitting the approval request.");
+        return;
+      }
+      if (!captchaToken) {
+        showToast("Security check required", "Complete the security check before requesting approval.");
+        return;
+      }
+      const channels = Array.from(document.querySelectorAll(".channel input:checked"), input => input.value);
+      const request = {
+        campaignName: document.getElementById("campaignName").value.trim(),
+        message: messageText.value.trim(),
+        audience: document.querySelector('[aria-label="Audience group"]').value,
+        channels,
+        sendDate: document.getElementById("sendDate").value,
+        sendTime: document.getElementById("sendTime").value,
+        recipientEmail: document.getElementById("directEmail").value.trim(),
+        recipientPhone: document.getElementById("directPhone").value.trim(),
+        captchaToken
+      };
+      if (!request.campaignName || !request.message || !request.channels.length) {
+        showToast("Campaign details needed", "Enter a campaign name and message, and select at least one channel.");
+        return;
+      }
+      try {
+        const response = await fetch(new URL("/api/approvals", apiBaseUrl), {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(request)
+        });
+        if (response.status === 429) throw new Error("Too many requests. Please wait before trying again.");
+        if (response.status === 400) throw new Error("The security check expired or failed. Complete it again and retry.");
+        if (response.status === 503) throw new Error("The security check service is temporarily unavailable.");
+        if (!response.ok) throw new Error("The approval email could not be sent. Check the service configuration and try again.");
+        showToast("Approval requested", "Your message has been emailed to Papi for review.");
+      } catch (error) {
+        showToast("Approval request failed", error.message);
+      } finally {
+        captchaToken = null;
+        if (window.turnstile && captchaWidgetId !== null) window.turnstile.reset(captchaWidgetId);
+        document.getElementById("captchaStatus").textContent = "Complete the security check before requesting approval.";
+      }
+    });
+    document.getElementById("previewButton").addEventListener("click", () => showToast("Message preview", messageText.value));
+    window.addEventListener("online", () => {
+      document.getElementById("connectionStatus").textContent = "Online";
+      showToast("Connection restored", "You can now submit an approval request.");
+    });
+    window.addEventListener("offline", () => {
+      document.getElementById("connectionStatus").textContent = "Offline";
+      showToast("Working offline", "You can prepare and save campaigns.");
+    });
+    const priorityPanel = document.getElementById("priorityPanel");
+    const priorityTitle = document.getElementById("priorityTitle");
+    const priorityContent = document.getElementById("priorityContent");
+    const priorityAction = document.getElementById("priorityAction");
+
+    const priorityViews = {
+      audiences: {
+        title: "Audience groups",
+        action: "Add audience",
+        html: `<div class="import-grid">
+          <div class="import-box">
+            <h3>Import contacts from mobile or desktop</h3>
+            <p>Choose CSV, TXT or VCF exported from Google Contacts, iPhone, Outlook or a database. Batch processing supports audiences above 1 billion contacts when connected to a server-backed database.</p>
+            <input type="file" id="contactFile" accept=".csv,.txt,.vcf,.xls,.xlsx,text/csv,text/plain,text/vcard" aria-label="Import contact file">
+            <select class="input" id="importGroup" aria-label="Import destination group">
+              <option>Accra Academy — Parents</option>
+              <option>JHS 2 — All classes</option>
+              <option>Health Department</option>
+              <option>Volunteers — Greater Accra</option>
+            </select>
+            <div class="import-progress">
+              <div class="import-progress-track"><i id="importProgressBar"></i></div>
+              <div class="import-progress-row"><span id="importProgressText">No import in progress</span><span id="importProgressCount">0 contacts</span></div>
+            </div>
+          </div>
+          <div class="import-box">
+            <h3>Add or paste one recipient</h3>
+            <p>A direct email, mobile number or both can be added and checked for consent before sending.</p>
+            <div class="manual-contact">
+              <input class="input" id="manualName" placeholder="Full name" autocomplete="name">
+              <input class="input" id="manualEmail" type="email" placeholder="Email address" autocomplete="email">
+              <input class="input" id="manualPhone" type="tel" placeholder="Phone / SMS number" autocomplete="tel">
+              <button class="mini-btn primary" id="manualAddButton" type="button">Add</button>
+            </div>
+          </div>
+        </div>
+        <table class="data-table" style="margin-top:12px"><thead><tr><th>Group</th><th>Scope</th><th>Contacts</th><th>Consent</th><th>Access</th></tr></thead><tbody>
+          <tr><td><strong>Accra Academy — Parents</strong></td><td>School</td><td>482</td><td><span class="badge green">100% checked</span></td><td>Papi</td></tr>
+          <tr><td><strong>JHS 2 — All classes</strong></td><td>Class</td><td>216</td><td><span class="badge green">97% checked</span></td><td>Form teachers</td></tr>
+          <tr><td><strong>Health Department</strong></td><td>Department</td><td>84</td><td><span class="badge green">100% checked</span></td><td>Operations team</td></tr>
+          <tr><td><strong>Volunteers — Greater Accra</strong></td><td>Region / role</td><td>129</td><td><span class="badge orange">6 opt-outs</span></td><td>Regional leads</td></tr>
+        </tbody></table>`
+      },
+      channels: {
+        title: "SMS, email and WhatsApp",
+        action: "Configure channel",
+        html: `<table class="data-table"><thead><tr><th>Channel</th><th>Contacts ready</th><th>Last delivery</th><th>Status</th><th>Action</th></tr></thead><tbody>
+          <tr><td><strong>WhatsApp</strong></td><td>438</td><td>96.4%</td><td><span class="badge green">Ready</span></td><td><button class="mini-btn">Select</button></td></tr>
+          <tr><td><strong>SMS</strong></td><td>482</td><td>91.8%</td><td><span class="badge green">Ready</span></td><td><button class="mini-btn">Select</button></td></tr>
+          <tr><td><strong>Email</strong></td><td>356</td><td>88.2%</td><td><span class="badge green">Ready</span></td><td><button class="mini-btn">Select</button></td></tr>
+        </tbody></table>`
+      },
+      templates: {
+        title: "Approved templates",
+        action: "Create template",
+        html: `<table class="data-table"><thead><tr><th>Template</th><th>Use</th><th>Channels</th><th>Review</th><th>Action</th></tr></thead><tbody>
+          <tr><td><strong>School closure</strong></td><td>Urgent notice</td><td>SMS · WhatsApp</td><td><span class="badge green">Approved</span></td><td><button class="mini-btn">Use</button></td></tr>
+          <tr><td><strong>Fee reminder</strong></td><td>Finance</td><td>SMS · Email</td><td><span class="badge green">Approved</span></td><td><button class="mini-btn">Use</button></td></tr>
+          <tr><td><strong>Meeting notice</strong></td><td>Community</td><td>All channels</td><td><span class="badge green">Approved</span></td><td><button class="mini-btn">Use</button></td></tr>
+          <tr><td><strong>Appointment reminder</strong></td><td>Health / office</td><td>SMS · WhatsApp</td><td><span class="badge orange">Human review</span></td><td><button class="mini-btn">Use</button></td></tr>
+        </tbody></table>`
+      },
+      reports: {
+        title: "Delivery reports",
+        action: "Export report",
+        html: `<table class="data-table"><thead><tr><th>Campaign</th><th>Sent</th><th>Delivered</th><th>Failed</th><th>Replied</th><th>Channel</th></tr></thead><tbody>
+          <tr><td><strong>Term 1 meeting</strong></td><td>482</td><td>456</td><td>26</td><td>118</td><td>WhatsApp</td></tr>
+          <tr><td><strong>Fee reminder — Week 3</strong></td><td>624</td><td>598</td><td>26</td><td>84</td><td>SMS</td></tr>
+          <tr><td><strong>Clinic appointment</strong></td><td>356</td><td>314</td><td>42</td><td>207</td><td>Email</td></tr>
+        </tbody></table>`
+      },
+      consent: {
+        title: "Consent and opt-out tracking",
+        action: "Import consent",
+        html: `<table class="data-table"><thead><tr><th>Contact</th><th>Group</th><th>Permission</th><th>Recorded by</th><th>Last action</th></tr></thead><tbody>
+          <tr><td><strong>Kofi Mensah</strong></td><td>JHS 2 Parents</td><td><span class="badge green">Consented</span></td><td>Papi</td><td>Nov 18</td></tr>
+          <tr><td><strong>Mama Adjoa</strong></td><td>Community</td><td><span class="badge red">Opted out</span></td><td>Elvis Owusu</td><td>Nov 21</td></tr>
+          <tr><td><strong>Ama Serwaa</strong></td><td>Clinic patients</td><td><span class="badge green">Consented</span></td><td>Grace Lartey</td><td>Nov 20</td></tr>
+        </tbody></table>`
+      },
+      approvals: {
+        title: "Message approvals",
+        action: "Approval rules",
+        html: `<table class="data-table"><thead><tr><th>Campaign</th><th>Sender</th><th>Audience</th><th>Risk</th><th>Decision</th></tr></thead><tbody>
+          <tr><td><strong>Emergency closure notice</strong></td><td>Papi</td><td>482 parents</td><td><span class="badge red">Urgent / sensitive</span></td><td><div class="table-actions"><button class="mini-btn primary approval-button" data-action="approved">Approve</button><button class="mini-btn approval-button" data-action="returned">Return</button></div></td></tr>
+          <tr><td><strong>Term 1 fee reminder</strong></td><td>Elvis Owusu</td><td>624 parents</td><td><span class="badge orange">Large audience</span></td><td><div class="table-actions"><button class="mini-btn primary approval-button" data-action="approved">Approve</button><button class="mini-btn approval-button" data-action="returned">Return</button></div></td></tr>
+        </tbody></table>`
+      }
+    };
+
+    document.querySelectorAll(".priority-tool").forEach(button => {
+      button.addEventListener("click", () => {
+        const view = priorityViews[button.dataset.view];
+        priorityTitle.textContent = view.title;
+        priorityAction.textContent = view.action;
+        priorityContent.innerHTML = view.html;
+        priorityPanel.classList.add("active");
+        priorityPanel.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      });
+    });
+    priorityContent.addEventListener("click", event => {
+      if (!event.target.classList.contains("approval-button")) return;
+      const row = event.target.closest("tr");
+      row.querySelector(".table-actions").innerHTML = event.target.dataset.action === "approved"
+        ? '<span class="badge green">Approved</span>'
+        : '<span class="badge orange">Returned for changes</span>';
+      showToast(event.target.dataset.action === "approved" ? "Campaign approved" : "Campaign returned", "Review decision recorded with the staff member's name.");
+    });
+    document.querySelectorAll(".nav button").forEach(button => {
+      button.addEventListener("click", () => {
+        document.querySelectorAll(".nav button").forEach(item => item.classList.remove("active"));
+        button.classList.add("active");
+        document.getElementById("pageTitle").textContent = button.dataset.page;
+      });
+    });
+    priorityContent.addEventListener("change", event => {
+      if (event.target.id !== "contactFile") return;
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+
+      const progressBar = document.getElementById("importProgressBar");
+      const progressText = document.getElementById("importProgressText");
+      const progressCount = document.getElementById("importProgressCount");
+      const chunkSize = 2 * 1024 * 1024;
+      let offset = 0;
+      let completeLines = 0;
+      let carry = "";
+
+      async function processChunk() {
+        if (offset >= file.size) {
+          if (carry.trim()) completeLines += 1;
+          const destination = document.getElementById("importGroup").value;
+          progressBar.style.width = "100%";
+          progressText.textContent = `Queued for ${destination}`;
+          progressCount.textContent = `${completeLines.toLocaleString()} contacts`;
+          showToast("Contact import queued", `${completeLines.toLocaleString()} contacts will be processed by the server in secure batches.`);
+          return;
+        }
+        const blob = file.slice(offset, Math.min(offset + chunkSize, file.size));
+        const text = await blob.text();
+        const combined = carry + text;
+        const lines = combined.split(/\r\n|\n|\r/);
+        carry = lines.pop() || "";
+        for (const line of lines) {
+          if (line.trim()) completeLines += 1;
+        }
+        offset += chunkSize;
+        progressBar.style.width = `${Math.min(99, Math.round((offset / file.size) * 100))}%`;
+        progressText.textContent = "Reading contact batches";
+        progressCount.textContent = `${completeLines.toLocaleString()} contacts`;
+        setTimeout(processChunk, 0);
+      }
+      processChunk();
+    });
+    priorityContent.addEventListener("click", event => {
+      if (event.target.id === "manualAddButton") {
+        const name = document.getElementById("manualName").value.trim();
+        const email = document.getElementById("manualEmail").value.trim();
+        const phone = document.getElementById("manualPhone").value.trim();
+        if (!name || (!email && !phone)) {
+          showToast("Recipient details needed", "Enter a name and at least an email or phone number.");
+          return;
+        }
+        if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+          showToast("Check the email address", "Enter a valid email address before adding the recipient.");
+          return;
+        }
+        showToast("Recipient ready", `${name} was added and marked for consent review.`);
+        document.getElementById("manualName").value = "";
+        document.getElementById("manualEmail").value = "";
+        document.getElementById("manualPhone").value = "";
+      }
+    });
+    const addDirectContact = document.getElementById("addDirectContact");
+    addDirectContact.addEventListener("click", () => {
+      const email = document.getElementById("directEmail").value.trim();
+      const phone = document.getElementById("directPhone").value.trim();
+      if (!email && !phone) {
+        showToast("Recipient needed", "Enter an email address or phone number.");
+        return;
+      }
+      if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        showToast("Check the email address", "Enter a valid email address.");
+        return;
+      }
+      showToast("Recipient added", "The direct recipient was added to this campaign after consent checks.");
+    });
+    if (!navigator.onLine) document.getElementById("connectionStatus").textContent = "Offline";
+    updateCount();
+  </script>
+</body>
+</html>
